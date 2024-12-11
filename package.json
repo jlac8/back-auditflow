@@ -1,0 +1,57 @@
+{
+  "name": "back-auditflow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsc && node dist/index.js",
+    "format": "biome format --write ./src",
+    "lint": "biome lint --write ./src",
+    "check": "biome check --write ./src",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "prisma-format": "prisma-case-format --file ./prisma/schema.prisma --config-file ./prisma/.prisma-case-format",
+    "prisma-migrate": "prisma migrate dev",
+    "prisma-migrate:format": "prisma-case-format --file ./prisma/schema.prisma --config-file ./prisma/.prisma-case-format && prisma migrate dev"
+  },
+  "keywords": [],
+  "author": "Juan Alva<jlalvac@uni.pe>",
+  "license": "ISC",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.3",
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.7.5",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prisma": "5.21.1",
+    "prisma-case-format": "^2.2.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlac8/back-auditflow.git"
+  },
+  "lint-staged": {
+    "*": [
+      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ]
+  },
+  "dependencies": {
+    "@prisma/client": "5.21.1",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0"
+  }
+}
