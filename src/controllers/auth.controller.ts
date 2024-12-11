@@ -1,84 +1,99 @@
 import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
-import type { TravelAgencyEntry } from "../schemas/agency.schema";
-import type { LoginEntry } from "../schemas/login.schema";
-import type { TouristEntry } from "../schemas/tourist.schema";
-import { createTravelAgency } from "../services/agency.services";
+import type { LoginEntry } from "../schemas/login.schema"; // Asegúrate de que login.schema.ts existe con LoginEntry
 import { createAuthResponse } from "../services/auth.services";
-import { sendWelcomeEmail } from "../services/email.services";
-import { createTourist } from "../services/tourist.services";
-import { findUserByEmail, updateUser } from "../services/user.services";
+import { z } from "zod";
+import { PrismaClient } from "@prisma/client"; // Prisma Importado
 
-export const registerTourist = async (req: Request, res: Response) => {
+// Inicializa el cliente Prisma
+const prisma = new PrismaClient();
+
+export const registerAuditorSchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  email: z.string().email("El correo electrónico debe ser válido"),
+  password: z
+    .string()
+    .min(7, "La contraseña debe tener al menos 7 caracteres")
+    .max(24, "La contraseña debe tener como máximo 24 caracteres"),
+  teamName: z.string().optional(),
+  role: z.string().optional(),
+});
+
+export type RegisterAuditorEntry = z.infer<typeof registerAuditorSchema>;
+
+export const registerAuditor = async (req: Request, res: Response) => {
   try {
-    const dataNewTourist = req.body as TouristEntry;
+    const dataNewAuditor = registerAuditorSchema.parse(req.body);
 
-    const newTourist = await createTourist(dataNewTourist);
+    // Hasheamos la contraseña antes de guardarla
+    const hashedPassword = await bcrypt.hash(dataNewAuditor.password, 10);
 
-    await sendWelcomeEmail(dataNewTourist.email, dataNewTourist.firstName);
+    const newAuditor = await prisma.auditor.create({
+      data: {
+        name: dataNewAuditor.name,
+        email: dataNewAuditor.email,
+        password: hashedPassword,
+        teamName: dataNewAuditor.teamName || undefined,
+        role: dataNewAuditor.role || undefined,
+      },
+    });
 
     res.status(201).json({
-      message: "Tourist registered successfully!",
-      data: newTourist,
+      message: "Auditor registered successfully!",
+      data: newAuditor,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    // Si el error es de validación de Zod, puedes manejarlo así:
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        errors: error.errors.map((e) => ({ message: e.message })),
+      });
+    }
     res
       .status(500)
-      .json({ errors: [{ message: "Error at registering the tourist" }] });
+      .json({ errors: [{ message: "Error at registering the auditor" }] });
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginAuditor = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body as LoginEntry;
 
-    const userFound = await findUserByEmail(email);
+    // Buscamos el auditor por email
+    const auditorFound = await prisma.auditor.findUnique({
+      where: { email },
+    });
 
-    if (!userFound) {
-      throw new Error("User not found");
+    if (!auditorFound) {
+      throw new Error("Auditor not found");
     }
 
     const isPasswordCorrect = await bcrypt.compare(
       password,
-      userFound.password
+      auditorFound.password
     );
 
     if (!isPasswordCorrect) {
       throw new Error("Incorrect password");
     }
 
-    const user = await updateUser(userFound.userId, { lastLogin: new Date() });
+    // Si deseas actualizar campos como lastLogin, primero debes tener esa propiedad en tu modelo Auditor.
+    // Por ejemplo, si agregas lastLogin DateTime en schema.prisma:
+    // await prisma.auditor.update({
+    //   where: { id: auditorFound.id },
+    //   data: { lastLogin: new Date() },
+    // });
 
-    const resAuth = createAuthResponse(user);
+    const resAuth = createAuthResponse(auditorFound);
     res.status(200).json({
-      message: "User logged in successfully!",
+      message: "Auditor logged in successfully!",
       ...resAuth,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    if (error instanceof Error) {
-      res.status(400).json({
-        errors: [{ message: `Error at logging. ${error.message}` }],
-      });
-    }
-  }
-};
-
-export const registerTravelAgency = async (req: Request, res: Response) => {
-  try {
-    const dataNewTravelAgency = req.body as TravelAgencyEntry;
-
-    const newTravelAgency = await createTravelAgency(dataNewTravelAgency);
-
-    res.status(201).json({
-      message: "Travel Agency registered successfully!",
-      data: newTravelAgency,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      errors: [{ message: "Error at registering the travel agency" }],
+    res.status(400).json({
+      errors: [{ message: `Error at logging in. ${error.message}` }],
     });
   }
 };

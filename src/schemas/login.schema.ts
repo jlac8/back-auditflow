@@ -1,5 +1,6 @@
-import type { User } from "@prisma/client";
+// src/schemas/login.schema.ts
 import { z } from "zod";
+import type { Auditor } from "@prisma/client";
 
 export const loginSchema = z.object({
   email: z
@@ -15,6 +16,10 @@ export const loginSchema = z.object({
 
 export type LoginEntry = z.infer<typeof loginSchema>;
 
-export type UserWithRelations = User & {
-  auditor?: Auditor;
+// Si en algún momento necesitas relacionar auditor con audits u otras relaciones,
+// podrías definir un tipo AuditorWithRelations. Pero por ahora, no es obligatorio.
+export type AuditorWithRelations = Auditor & {
+  audits?: Audit[];
+  // Añade otras relaciones si es necesario, por ejemplo riskMatrices o walkthroughs
+  // dependiendo de tu lógica interna.
 };
