@@ -3,10 +3,13 @@ import express, { type Request, type Response } from "express";
 import morgan from "morgan";
 import { HOSTNAME, PORT } from "./config";
 import authRouter from "./routes/auth.routes";
+import profileRouter from "./routes/profile.routes";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+app.use("/uploads", express.static("uploads"));
 
 morgan.token("body", (req: Request) => JSON.stringify(req.body));
 app.use(
@@ -25,6 +28,7 @@ const welcomeListener = (_req: Request, res: Response) => {
 
 app.get("/", welcomeListener);
 app.use("/api/auth", authRouter);
+app.use("/api", profileRouter);
 
 app.listen(PORT, () => {
   console.log(`✅ AuditFlow API is running on http://${HOSTNAME}:${PORT}`);

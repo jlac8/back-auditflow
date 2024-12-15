@@ -1,56 +1,66 @@
-import type { NextFunction, Request, Response } from "express";
-import { type AuthPayload, verifyToken } from "../services/auth.services";
+import type { NextFunction, Request, Response, RequestHandler } from "express";
+import { verifyToken, type AuthPayload } from "../services/auth.services";
 
-export interface AuthRequest extends Request, AuthPayload {}
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: number;
+        name?: string;
+        email?: string;
+      };
+    }
+  }
+}
 
-export const verifyAuthRequest = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const verifyAuthRequest: RequestHandler = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     res.status(401).json({
       errors: [{ message: "Missing authorization header" }],
     });
-    return;
+    return; // No se retorna Response, solo se hace return vacío (void)
   }
 
   try {
-    const { touristId, travelAgencyId, username, email } = verifyToken(token);
+    const payload = verifyToken(token) as AuthPayload;
+    const { auditorId, name, email } = payload;
 
-    if (!touristId && !travelAgencyId) {
-      throw new Error("No touristId or travelAgencyId");
+    if (!auditorId) {
+      throw new Error("No auditorId found in token");
     }
-    req.touristId = touristId;
-    req.travelAgencyId = travelAgencyId;
-    req.username = username;
-    req.email = email;
+
+    // Ahora req.user está definido globalmente, no necesitamos `AuthRequest`
+    req.user = {
+      id: auditorId,
+      name,
+      email,
+    };
+
     next();
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in verifyAuthRequest:", error);
     res.status(401).json({
       errors: [{ message: "Unauthorized" }],
     });
+    return; // Detenemos la ejecución con un return vacío.
   }
 };
 
-type OnlyAuthRequest = Omit<AuthRequest, keyof Request>;
-
 export const AuthReqHasValues = (
-  req: AuthRequest,
-  ...keys: (keyof OnlyAuthRequest)[]
-): OnlyAuthRequest => {
+  req: Request,
+  ...keys: (keyof NonNullable<Request["user"]>)[]
+) => {
+  if (!req.user) {
+    throw new Error("No user in request");
+  }
+
   for (const key of keys) {
-    if (req[key] === undefined) {
-      throw new Error(`${key} is required`);
+    if (req.user[key] === undefined) {
+      throw new Error(`${String(key)} is required`);
     }
   }
 
-  const result = keys.reduce((acc, key) => {
-    const value = req[key];
-    acc[key] = value;
-    return acc;
-  }, {} as Record<keyof OnlyAuthRequest, unknown>);
-  return result as OnlyAuthRequest;
+  return req.user; // Ahora req.user existe y tiene las keys requeridas
 };

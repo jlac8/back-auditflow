@@ -78,13 +78,6 @@ export const loginAuditor = async (req: Request, res: Response) => {
       throw new Error("Incorrect password");
     }
 
-    // Si deseas actualizar campos como lastLogin, primero debes tener esa propiedad en tu modelo Auditor.
-    // Por ejemplo, si agregas lastLogin DateTime en schema.prisma:
-    // await prisma.auditor.update({
-    //   where: { id: auditorFound.id },
-    //   data: { lastLogin: new Date() },
-    // });
-
     const resAuth = createAuthResponse(auditorFound);
     res.status(200).json({
       message: "Auditor logged in successfully!",
