@@ -19,7 +19,7 @@ export type LoginEntry = z.infer<typeof loginSchema>;
 // Si en algún momento necesitas relacionar auditor con audits u otras relaciones,
 // podrías definir un tipo AuditorWithRelations. Pero por ahora, no es obligatorio.
 export type AuditorWithRelations = Auditor & {
-  audits?: Audit[];
+  audits?: Auditor[];
   // Añade otras relaciones si es necesario, por ejemplo riskMatrices o walkthroughs
   // dependiendo de tu lógica interna.
 };

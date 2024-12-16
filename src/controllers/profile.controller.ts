@@ -35,7 +35,7 @@ export async function updateProfile(req: MulterRequest, res: Response) {
 
     res.status(200).json({ data: updatedAuditor });
     return;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ error: "Error al actualizar el perfil" });
     return;
@@ -58,7 +58,7 @@ export async function getProfile(req: Request, res: Response) {
 
     res.status(200).json({ data: auditor });
     return;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error getting profile:", error);
     res.status(500).json({ error: "Error al obtener el perfil" });
     return;

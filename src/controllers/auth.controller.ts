@@ -1,11 +1,10 @@
 import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
-import type { LoginEntry } from "../schemas/login.schema"; // Asegúrate de que login.schema.ts existe con LoginEntry
+import type { LoginEntry } from "../schemas/login.schema";
 import { createAuthResponse } from "../services/auth.services";
 import { z } from "zod";
-import { PrismaClient } from "@prisma/client"; // Prisma Importado
+import { PrismaClient } from "@prisma/client";
 
-// Inicializa el cliente Prisma
 const prisma = new PrismaClient();
 
 export const registerAuditorSchema = z.object({
@@ -21,11 +20,13 @@ export const registerAuditorSchema = z.object({
 
 export type RegisterAuditorEntry = z.infer<typeof registerAuditorSchema>;
 
-export const registerAuditor = async (req: Request, res: Response) => {
+export const registerAuditor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const dataNewAuditor = registerAuditorSchema.parse(req.body);
 
-    // Hasheamos la contraseña antes de guardarla
     const hashedPassword = await bcrypt.hash(dataNewAuditor.password, 10);
 
     const newAuditor = await prisma.auditor.create({
@@ -42,31 +43,34 @@ export const registerAuditor = async (req: Request, res: Response) => {
       message: "Auditor registered successfully!",
       data: newAuditor,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(error);
-    // Si el error es de validación de Zod, puedes manejarlo así:
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.status(400).json({
         errors: error.errors.map((e) => ({ message: e.message })),
       });
+      return;
     }
-    res
-      .status(500)
-      .json({ errors: [{ message: "Error at registering the auditor" }] });
+    res.status(500).json({
+      errors: [{ message: "Error at registering the auditor" }],
+    });
   }
 };
 
-export const loginAuditor = async (req: Request, res: Response) => {
+export const loginAuditor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { email, password } = req.body as LoginEntry;
 
-    // Buscamos el auditor por email
     const auditorFound = await prisma.auditor.findUnique({
       where: { email },
     });
 
     if (!auditorFound) {
-      throw new Error("Auditor not found");
+      res.status(404).json({ errors: [{ message: "Auditor not found" }] });
+      return;
     }
 
     const isPasswordCorrect = await bcrypt.compare(
@@ -75,7 +79,8 @@ export const loginAuditor = async (req: Request, res: Response) => {
     );
 
     if (!isPasswordCorrect) {
-      throw new Error("Incorrect password");
+      res.status(401).json({ errors: [{ message: "Incorrect password" }] });
+      return;
     }
 
     const resAuth = createAuthResponse(auditorFound);
@@ -83,7 +88,7 @@ export const loginAuditor = async (req: Request, res: Response) => {
       message: "Auditor logged in successfully!",
       ...resAuth,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(error);
     res.status(400).json({
       errors: [{ message: `Error at logging in. ${error.message}` }],

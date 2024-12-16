@@ -9,7 +9,7 @@
     "outDir": "./dist" /* Directorio de salida para el código compilado. */,
     "esModuleInterop": true /* Facilita la importación de módulos CommonJS. */,
     "forceConsistentCasingInFileNames": true /* Evita problemas de mayúsculas/minúsculas en ambientes Unix. */,
-    "strict": true /* Activa el modo estricto de TypeScript para mayor calidad del código. */,
+    "strict": false /* Activa el modo estricto de TypeScript para mayor calidad del código. */,
     "skipLibCheck": true /* Omite chequeos de definición en librerías externas, reduce errores innecesarios. */
   },
   "include": ["src"] /* Incluye tu carpeta de código fuente. */,

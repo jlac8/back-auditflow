@@ -39,7 +39,7 @@ export const verifyAuthRequest: RequestHandler = (req, res, next) => {
     };
 
     next();
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in verifyAuthRequest:", error);
     res.status(401).json({
       errors: [{ message: "Unauthorized" }],
