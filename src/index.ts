@@ -4,6 +4,7 @@ import morgan from "morgan";
 import { HOSTNAME, PORT } from "./config";
 import authRouter from "./routes/auth.routes";
 import profileRouter from "./routes/profile.routes";
+import auditsRoutes from "./routes/audits.routes";
 
 const app = express();
 app.use(express.json());
@@ -29,6 +30,7 @@ const welcomeListener = (_req: Request, res: Response) => {
 app.get("/", welcomeListener);
 app.use("/api/auth", authRouter);
 app.use("/api", profileRouter);
+app.use("/api/audits", auditsRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ AuditFlow API is running on http://${HOSTNAME}:${PORT}`);

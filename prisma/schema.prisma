@@ -8,23 +8,25 @@ datasource db {
 }
 
 model Auditor {
-  id          Int      @id @default(autoincrement())
-  name        String
-  email       String   @unique
-  password    String
-  teamName    String?
-  role        String?
-  profilePicture String?
-  audits      Audit[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String   @unique
+  password        String
+  teamName        String?
+  role            String?
+  profilePicture  String?
+  audits          Audit[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("auditors")
 }
 
 model Audit {
   id            Int      @id @default(autoincrement())
   leaderName    String
   auditName     String
-  status        String
+  status        String    @default("Activa")
   period        String
   riskMatrices  RiskMatrix[]
   walkthroughs  Walkthrough[]
@@ -32,6 +34,8 @@ model Audit {
   auditor       Auditor   @relation(fields: [auditorId], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@map("audits")
 }
 
 model RiskMatrix {
@@ -43,6 +47,8 @@ model RiskMatrix {
   audit          Audit    @relation(fields: [auditId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@map("risk_matrices")
 }
 
 model Walkthrough {
@@ -52,4 +58,6 @@ model Walkthrough {
   audit         Audit     @relation(fields: [auditId], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@map("walkthroughs")
 }
